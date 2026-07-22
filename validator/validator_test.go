@@ -23,14 +23,15 @@ func TestValidateFile_ValidYAML(t *testing.T) {
 func TestValidateFile_InvalidYAML(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "invalid.yaml")
-	content := []byte("name: hello\n  - bad indentation\n")
+	// Tab characters are illegal in YAML indentation
+	content := []byte("name: hello\n\tindented_with_tab\n")
 	if err := os.WriteFile(path, content, 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	r := ValidateFile(path)
 	if r.Valid {
-		t.Error("expected invalid, got valid")
+		t.Error("expected invalid YAML (tab in indentation), got valid")
 	}
 }
 
