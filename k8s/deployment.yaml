@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yaml-validator
+  namespace: ${K8S_NAMESPACE}
+  labels:
+    app: yaml-validator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yaml-validator
+  template:
+    metadata:
+      labels:
+        app: yaml-validator
+    spec:
+      containers:
+        - name: yaml-validator
+          image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+          command: ["/usr/local/bin/yaml-validator"]
+          args: ["--help"]
