@@ -1,9 +1,8 @@
 FROM golang:1.22-alpine AS builder
 
 WORKDIR /build
-COPY go.mod ./
-RUN go mod tidy
 COPY . .
+RUN go mod tidy
 RUN CGO_ENABLED=0 go build -o /yaml-validator -ldflags="-s -w" .
 
 FROM alpine:3.20
