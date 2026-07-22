@@ -2,7 +2,7 @@ FROM golang:1.22-alpine AS builder
 
 WORKDIR /build
 COPY go.mod ./
-RUN go mod download
+RUN go mod tidy
 COPY . .
 RUN CGO_ENABLED=0 go build -o /yaml-validator -ldflags="-s -w" .
 
