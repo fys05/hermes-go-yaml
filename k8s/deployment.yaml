@@ -26,5 +26,4 @@ spec:
             limits:
               cpu: 200m
               memory: 64Mi
-          command: ["/usr/local/bin/yaml-validator"]
-          args: ["--help"]
+          command: ["sleep", "infinity"]
