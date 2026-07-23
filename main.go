@@ -176,7 +176,7 @@ async function validate() {
       result.className = 'invalid';
       let msg = data.error;
       if (data.line > 0) {
-        msg = `<span class="error-line">Line ${data.line}, Col ${data.column}:</span> ${data.error}`;
+        msg = '<span class="error-line">Line ' + data.line + ', Col ' + data.column + ':</span> ' + data.error;
       }
       result.innerHTML = '<span class="invalid-text">✘ ' + msg + '</span>';
       status.textContent = '✗ Invalid';
