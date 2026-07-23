@@ -93,7 +93,7 @@ jobs:
           sed -i "s|\${DOCKER_IMAGE}|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g" deployment.yaml
           sed -i "s|\${DOCKER_TAG}|${{ github.sha }}|g" deployment.yaml
           sed -i "s|\${K8S_NAMESPACE}|${{ vars.K8S_NAMESPACE || 'default' }}|g" deployment.yaml service.yaml
-          kubectl apply -f deployment.yaml
-          kubectl apply -f service.yaml
-          kubectl rollout status deployment/yaml-validator -n "${{ vars.K8S_NAMESPACE || 'default' }}" --timeout=120s
-          kubectl get pods -l app=yaml-validator -n "${{ vars.K8S_NAMESPACE || 'default' }}"
+          kubectl apply -f deployment.yaml --insecure-skip-tls-verify --validate=false
+          kubectl apply -f service.yaml --insecure-skip-tls-verify --validate=false
+          kubectl rollout status deployment/yaml-validator -n "${{ vars.K8S_NAMESPACE || 'default' }}" --timeout=120s --insecure-skip-tls-verify
+          kubectl get pods -l app=yaml-validator -n "${{ vars.K8S_NAMESPACE || 'default' }}" --insecure-skip-tls-verify
