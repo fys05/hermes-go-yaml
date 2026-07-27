@@ -115,9 +115,14 @@ jobs:
           kubectl apply -f k8s/postgres/service.yaml --insecure-skip-tls-verify --validate=false
           kubectl rollout status deployment/postgres -n "${NS}" --timeout=120s --insecure-skip-tls-verify
 
-          # Deploy middleware (if not exists)
-          kubectl get middleware http-redirect-https -n "${NS}" --insecure-skip-tls-verify >/dev/null 2>&1 || \
-            kubectl apply -f k8s/middleware.yaml --insecure-skip-tls-verify --validate=false
+          # Deploy middleware (skip if CRD not installed)
+          if kubectl get middleware http-redirect-https -n "${NS}" --insecure-skip-tls-verify >/dev/null 2>&1; then
+            echo "Middleware http-redirect-https already exists"
+          elif kubectl apply -f k8s/middleware.yaml --insecure-skip-tls-verify --validate=false 2>/dev/null; then
+            echo "Middleware http-redirect-https created"
+          else
+            echo "WARNING: Traefik Middleware CRD not installed — skipping middleware"
+          fi
 
           # Deploy ingress
           kubectl apply -f k8s/ingress.yaml --insecure-skip-tls-verify --validate=false
