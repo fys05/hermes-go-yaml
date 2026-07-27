@@ -91,7 +91,7 @@ jobs:
         run: |
           NS="${{ vars.K8S_NAMESPACE || 'default' }}"
           DOMAIN="${{ vars.DOMAIN }}"
-          DB_PASSWORD=*** secrets.DB_PASSWORD }}"
+          DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
 
           # Ensure image-secret exists
           kubectl get secret image-secret -n "${NS}" --insecure-skip-tls-verify >/dev/null 2>&1 || \
@@ -107,7 +107,7 @@ jobs:
             sed -i "s|\${DOCKER_TAG}|${{ github.sha }}|g" "$f"
             sed -i "s|\${K8S_NAMESPACE}|${NS}|g" "$f"
             sed -i "s|\${DOMAIN}|${DOMAIN}|g" "$f"
-            sed -i "s|\${DB_PASSWORD}|${DB_PASSWORD}|g" "$f"
+            sed -i "s|__DB_PASSWORD__|${DB_PASSWORD}|g" "$f"
           done
 
           # Deploy database
