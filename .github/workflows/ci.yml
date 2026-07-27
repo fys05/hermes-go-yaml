@@ -102,11 +102,13 @@ jobs:
               -n "${NS}" --insecure-skip-tls-verify
 
           # Substitute placeholders in all k8s YAML files
-          find k8s -name '*.yaml' -exec sed -i "s|\${DOCKER_IMAGE}|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g" {} \;
-          find k8s -name '*.yaml' -exec sed -i "s|\${DOCKER_TAG}|${{ github.sha }}|g" {} \;
-          find k8s -name '*.yaml' -exec sed -i "s|\${K8S_NAMESPACE}|${NS}|g" {} \;
-          find k8s -name '*.yaml' -exec sed -i "s|\${DOMAIN}|${DOMAIN}|g" {} \;
-          find k8s -name '*.yaml' -exec sed -i "s|\${DB_PASSWORD}|${DB_PASSWORD}|g" {} \;
+          for f in $(find k8s -name '*.yaml'); do
+            sed -i "s|\${DOCKER_IMAGE}|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g" "$f"
+            sed -i "s|\${DOCKER_TAG}|${{ github.sha }}|g" "$f"
+            sed -i "s|\${K8S_NAMESPACE}|${NS}|g" "$f"
+            sed -i "s|\${DOMAIN}|${DOMAIN}|g" "$f"
+            sed -i "s|\${DB_PASSWORD}|${DB_PASSWORD}|g" "$f"
+          done
 
           # Deploy database
           kubectl apply -f k8s/postgres/secret.yaml --insecure-skip-tls-verify --validate=false
