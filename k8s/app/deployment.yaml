@@ -15,6 +15,8 @@ spec:
       labels:
         app: yaml-validator
     spec:
+      imagePullSecrets:
+        - name: image-secret
       containers:
         - name: yaml-validator
           image: ${DOCKER_IMAGE}:${DOCKER_TAG}
@@ -24,6 +26,9 @@ spec:
           ports:
             - containerPort: 8080
               protocol: TCP
+          env:
+            - name: DATABASE_URL
+              value: "postgres://postgres:***@postgres.${K8S_NAMESPACE}.svc.cluster.local:5432/yamlvalidator"
           resources:
             requests:
               cpu: 50m

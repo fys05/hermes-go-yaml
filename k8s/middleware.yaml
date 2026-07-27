@@ -1,0 +1,9 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: http-redirect-https
+  namespace: ${K8S_NAMESPACE}
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true

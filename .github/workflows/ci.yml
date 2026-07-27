@@ -89,11 +89,42 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
       - name: Deploy to K8s
         run: |
-          cd k8s
-          sed -i "s|\${DOCKER_IMAGE}|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g" deployment.yaml
-          sed -i "s|\${DOCKER_TAG}|${{ github.sha }}|g" deployment.yaml
-          sed -i "s|\${K8S_NAMESPACE}|${{ vars.K8S_NAMESPACE || 'default' }}|g" deployment.yaml service.yaml
-          kubectl apply -f deployment.yaml --insecure-skip-tls-verify --validate=false
-          kubectl apply -f service.yaml --insecure-skip-tls-verify --validate=false
-          kubectl rollout status deployment/yaml-validator -n "${{ vars.K8S_NAMESPACE || 'default' }}" --timeout=120s --insecure-skip-tls-verify
-          kubectl get pods -l app=yaml-validator -n "${{ vars.K8S_NAMESPACE || 'default' }}" --insecure-skip-tls-verify
+          NS="${{ vars.K8S_NAMESPACE || 'default' }}"
+          DOMAIN="${{ vars.DOMAIN }}"
+          DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+
+          # Ensure image-secret exists
+          kubectl get secret image-secret -n "${NS}" >/dev/null 2>&1 || \
+            kubectl create secret docker-registry image-secret \
+              --docker-server="${{ env.REGISTRY }}" \
+              --docker-username="${{ github.actor }}" \
+              --docker-password="${{ secrets.GITHUB_TOKEN }}" \
+              -n "${NS}"
+
+          # Substitute placeholders in all k8s YAML files
+          find k8s -name '*.yaml' -exec sed -i "s|\${DOCKER_IMAGE}|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|g" {} \;
+          find k8s -name '*.yaml' -exec sed -i "s|\${DOCKER_TAG}|${{ github.sha }}|g" {} \;
+          find k8s -name '*.yaml' -exec sed -i "s|\${K8S_NAMESPACE}|${NS}|g" {} \;
+          find k8s -name '*.yaml' -exec sed -i "s|\${DOMAIN}|${DOMAIN}|g" {} \;
+          find k8s -name '*.yaml' -exec sed -i "s|\${DB_PASSWORD}|${DB_PASSWORD}|g" {} \;
+
+          # Deploy database
+          kubectl apply -f k8s/postgres/secret.yaml --insecure-skip-tls-verify --validate=false
+          kubectl apply -f k8s/postgres/pvc.yaml --insecure-skip-tls-verify --validate=false
+          kubectl apply -f k8s/postgres/deployment.yaml --insecure-skip-tls-verify --validate=false
+          kubectl apply -f k8s/postgres/service.yaml --insecure-skip-tls-verify --validate=false
+          kubectl rollout status deployment/postgres -n "${NS}" --timeout=120s --insecure-skip-tls-verify
+
+          # Deploy middleware (if not exists)
+          kubectl get middleware http-redirect-https -n "${NS}" >/dev/null 2>&1 || \
+            kubectl apply -f k8s/middleware.yaml --insecure-skip-tls-verify --validate=false
+
+          # Deploy ingress
+          kubectl apply -f k8s/ingress.yaml --insecure-skip-tls-verify --validate=false
+
+          # Deploy application
+          kubectl apply -f k8s/app/deployment.yaml --insecure-skip-tls-verify --validate=false
+          kubectl apply -f k8s/app/service.yaml --insecure-skip-tls-verify --validate=false
+          kubectl rollout status deployment/yaml-validator -n "${NS}" --timeout=120s --insecure-skip-tls-verify
+          kubectl get pods -l app=yaml-validator -n "${NS}" --insecure-skip-tls-verify
+          kubectl get pods -l app=postgres -n "${NS}" --insecure-skip-tls-verify
