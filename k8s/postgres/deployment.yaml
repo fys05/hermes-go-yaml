@@ -15,8 +15,6 @@ spec:
       labels:
         app: postgres
     spec:
-      imagePullSecrets:
-        - name: image-secret
       containers:
         - name: postgres
           image: postgres:16-alpine

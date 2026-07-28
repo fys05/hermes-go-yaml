@@ -15,8 +15,6 @@ spec:
       labels:
         app: yaml-validator
     spec:
-      imagePullSecrets:
-        - name: image-secret
       containers:
         - name: yaml-validator
           image: ${DOCKER_IMAGE}:${DOCKER_TAG}

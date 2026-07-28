@@ -93,13 +93,6 @@ jobs:
           IMG="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
           TAG="${{ github.sha }}"
 
-          kubectl get secret image-secret -n "${NS}" --insecure-skip-tls-verify >/dev/null 2>&1 || \
-            kubectl create secret docker-registry image-secret \
-              --docker-server="${{ env.REGISTRY }}" \
-              --docker-username="${{ github.actor }}" \
-              --docker-password="${{ secrets.GITHUB_TOKEN }}" \
-              -n "${NS}" --insecure-skip-tls-verify
-
           for f in $(find k8s -name '*.yaml'); do
             sed -i "s|\${DOCKER_IMAGE}|${IMG}|g" "$f"
             sed -i "s|\${DOCKER_TAG}|${TAG}|g" "$f"
