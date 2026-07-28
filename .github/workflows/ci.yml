@@ -92,7 +92,7 @@ jobs:
           NS="${{ vars.K8S_NAMESPACE || 'default' }}"
           DOMAIN="${{ vars.DOMAIN }}"
           TLS_SECRET="${{ vars.TLS_SECRET }}"
-          DB_PASSWORD=*** secrets.DB_PASSWORD }}"
+          DB_PASSWORD=***${{ secrets.DB_PASSWORD }}"
 
           # Create imagePullSecret (if not exists)
           kubectl get secret image-secret -n "${NS}" --insecure-skip-tls-verify >/dev/null 2>&1 || \
