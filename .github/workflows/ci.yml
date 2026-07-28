@@ -94,7 +94,7 @@ jobs:
           TLS_SECRET="${{ vars.TLS_SECRET }}"
           DB_PASSWORD=*** secrets.DB_PASSWORD }}"
 
-          # Ensure image-secret exists
+          # Create imagePullSecret (if not exists)
           kubectl get secret image-secret -n "${NS}" --insecure-skip-tls-verify >/dev/null 2>&1 || \
             kubectl create secret docker-registry image-secret \
               --docker-server="${{ env.REGISTRY }}" \
