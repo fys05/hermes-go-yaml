@@ -91,7 +91,8 @@ jobs:
         run: |
           NS="${{ vars.K8S_NAMESPACE || 'default' }}"
           DOMAIN="${{ vars.DOMAIN }}"
-          DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+          TLS_SECRET="${{ vars.TLS_SECRET }}"
+          DB_PASSWORD=*** secrets.DB_PASSWORD }}"
 
           # Ensure image-secret exists
           kubectl get secret image-secret -n "${NS}" --insecure-skip-tls-verify >/dev/null 2>&1 || \
@@ -107,7 +108,8 @@ jobs:
             sed -i "s|\${DOCKER_TAG}|${{ github.sha }}|g" "$f"
             sed -i "s|\${K8S_NAMESPACE}|${NS}|g" "$f"
             sed -i "s|\${DOMAIN}|${DOMAIN}|g" "$f"
-            sed -i "s|__DB_PASSWORD__|${DB_PASSWORD}|g" "$f"
+            sed -i "s|\${TLS_SECRET}|${TLS_SECRET}|g" "$f"
+            sed -i "s|\${DB_PASSWORD}|${DB_PASSWORD}|g" "$f"
           done
 
           # Deploy database
@@ -117,12 +119,9 @@ jobs:
           kubectl apply -f k8s/postgres/service.yaml --insecure-skip-tls-verify --validate=false
           kubectl rollout status deployment/postgres -n "${NS}" --timeout=120s --insecure-skip-tls-verify
 
-          # Deploy middleware (if not exists)
-          kubectl get middleware http-redirect-https -n "${NS}" --insecure-skip-tls-verify >/dev/null 2>&1 || \
-            kubectl apply -f k8s/middleware.yaml --insecure-skip-tls-verify --validate=false
-
-          # Deploy ingress
-          kubectl apply -f k8s/ingress.yaml --insecure-skip-tls-verify --validate=false
+          # Deploy ingress (HTTP redirect + HTTPS)
+          kubectl apply -f k8s/ingress-http.yaml --insecure-skip-tls-verify --validate=false
+          kubectl apply -f k8s/ingress-https.yaml --insecure-skip-tls-verify --validate=false
 
           # Deploy application
           kubectl apply -f k8s/app/deployment.yaml --insecure-skip-tls-verify --validate=false
